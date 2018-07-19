@@ -1,0 +1,12 @@
+{ "Users":[
+    {
+        "name": "Gary Jones",
+        "wont_eat": ["Eggs", "Pasta", "Japanese" ],
+        "drinks": ["Tequixa", "Rum"]
+    } , {
+        "name": "Garth Walters",
+        "wont_eat": ["Dosa", "Pasta","Fish", "Meat", "Salad", "Deserts", "Eggs", "Dairy", "Mexican"],
+        "drinks": ["7 up", "Tequila"]
+    }
+    ]
+}
