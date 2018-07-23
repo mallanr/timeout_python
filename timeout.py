@@ -19,7 +19,7 @@ for x in sys.argv:
     dbg_print ("Argument: ", x) 
 
 if len (sys.argv) != 3 :
-    print ("Error: python a_args.py users.json venue.json")
+    print ("Error: Need names of 2 files to proceed. Usage :python timeout.py users.json venue.json")
     sys.exit (1)
 
 f1 = sys.argv[1]
@@ -41,9 +41,14 @@ d_user = dict();
 if r1 != None and r2 != None:
     dbg_print("Both are JSON files")
 
-def f_open(l_file):
+#-- function to check if the files are there or not 
+def f_file_exists(l_file):
     global d_user
     global d_ven
+    try:
+        v_fil = open(l_file, 'rb')
+    except IOError :
+        raise
     try:
         with open(l_file) as f:
             d_dict = json.load(f)
@@ -54,35 +59,47 @@ def f_open(l_file):
                 d_ven = d_dict
                 dbg_print("venues dict pop: ", 'Venues' in d_ven.keys(), len(d_ven["Venues"]))
     except FileNotFoundError:
-        dbg_print("Error:No such file :", l_file );
-        sys.exit(1)
+        raise
+    except IOError:
+        raise
     except:
-        dbg_print('Error:An error occured.')
-        sys.exit(1)
-
-#print(d_ven.keys())
-#print('Users' in d_user.keys())
-#print('Venues' in d_ven.keys())
-#if not(('Users' in d_user.keys()) and ('Venues' in d_ven.keys())):
-#	print("Error:Expecting 2 json files - one with 'Users' and another with 'Venues' in it");
-#	sys.exit(1)
+        raise
 
 try:
-    f_open(f1);
+    f_file_exists(f1);
 except FileNotFoundError:
     print("Error:No such file :", f1 );
+    sys.exit(1)
+except IOError:
+    print("Error:Could not find the file :", f1 );
     sys.exit(1)
 except:
     print('Error:An error occured.')
     sys.exit(1)
 
 try:
-    f_open(f2);
+    f_file_exists(f2);
+except IOError:
+    print("Error:No such file :", f2 );
+    sys.exit(1)
 except FileNotFoundError:
-	print("Error:No such file :", f1 );
-	sys.exit(1)
+    print("Error:No such file :", f2 );
+    sys.exit(1)
 except:
-	print('Error:An error occured.');
+    print('Error:An error occured.')
+    sys.exit(1)
+
+dbg_print('Users' in d_user.keys())
+dbg_print('Venues' in d_ven.keys())
+#-- do the validation to check if we have got 2 properly formed json files 
+if (('Users' not in d_user.keys()) and ('Venues' not in d_ven.keys())):
+	print("Error:Expecting 2 json files - one for 'Users' and another for 'Venues'");
+	sys.exit(1)
+elif not(('Users' in d_user.keys())):
+	print("Error:Cannot find a proper json file for 'Users'");
+	sys.exit(1)
+elif not(('Venues' in d_ven.keys())):
+	print("Error:Cannot find a proper json file for 'Venues'");
 	sys.exit(1)
 
 dbg_print ("Validation Completed")
@@ -91,12 +108,14 @@ dbg_print ("Validation Completed")
 #pprint(d_user)
 #pprint(d_ven)
 
+#-- populate the dictionary object by stripping off any trailing spaces and lowercasing 
+
 		
 def prc_pop_dict(l_key,s_set,d_dict):
     ls2= set(w.lower().strip('\t').strip('\n') for w in s_set)
     d_dict[l_key] = ls2
 
-l_timeout_points = 0;	
+
 def f_check(l_chk_ven):
     l_err_drink="";
     l_err_food="";
@@ -105,6 +124,7 @@ def f_check(l_chk_ven):
     l_f_ok = 1;
     l_timeout_points =0;
     for key in d_user_drink:
+        dbg_print("------------------------------------------")
         dbg_print("Drinks Menu : ", key, "for ", l_chk_ven)
         s1 = d_ven_drink[l_chk_ven];
         s2 = d_user_drink[key];
@@ -141,7 +161,7 @@ def f_check(l_chk_ven):
        l_err_food = "[" + l_err_food + "] gets no food"
        l_timeout_points = 0; 
     if l_d_ok == 0 or l_f_ok == 0:
-       l_ok = 0;        
+       l_ok = 0;
     return(l_ok,l_timeout_points,l_err_drink + " " + l_err_food)
 
 l_num_users=len(d_user["Users"])
@@ -187,11 +207,32 @@ for key in d_ven_food:
     dbg_print(key, " " , d_ven_food[key]);
 dbg_print("########## Finally checking user preferences vs venues ##############")
 
+d_avoid = dict()
+d_ok_to_eat = dict()
 for v in range(l_num_vens):
     l_chk_ven = d_ven["Venues"][v]["name"]
     (l_yes_no, l_pts, l_str) = f_check(l_chk_ven)
     if l_yes_no == 0:
-        print(l_chk_ven , ":" ,l_str)
+        dbg_print(l_chk_ven , ":" ,l_str)
+        d_avoid[l_chk_ven] = l_str
     else:
-        print(l_chk_ven , ":" ,"Ok to eat ,( Timeout Points: ",l_pts," )")
-    
+        dbg_print(l_chk_ven , ":" ,"Ok to eat ,( Timeout Points: ",l_pts," )")
+        d_ok_to_eat[l_chk_ven] = l_pts
+
+print(" ")
+print("Places to go:")
+print(" ")
+if len(d_ok_to_eat) == 0:
+	print("\t","We are sorry to note that we cannot find any venue which can satisfy your drinks/food list");
+else:	
+	for key in d_ok_to_eat:
+		print("\t", key, "," , str(d_ok_to_eat[key]) ," Timeout points ");
+	print("\t","(Note : Higher the Timeout points for a Venue, more choices for food/drink)");
+print(" ")
+print(" ")
+print("Places to avoid:")
+print(" ")
+for key in d_avoid:
+    print("\t",key, ":" , d_avoid[key]);
+    #for l_val in d_avoid[key]:
+    #    print("\t",l_val);	

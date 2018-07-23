@@ -1,24 +1,21 @@
-#-- Test Only one file given
-#-- Expected : "Error: python a_args.py users.json venue.json"
-python timeout.py users.json 
-
-#-- Test file with wrong names 
-#-- Expected : "Error:An error occured."
-python timeout.py usersX.json venueX.json
-
-#-- Test file with correct json files but with wrong "keys"
-#-- Error:Expecting 2 json files - one with 'Users' and another with 'Venues' in it
+#-- "Error:Expecting 2 json files - one for 'Users' and another for 'Venues'"
 python timeout.py users_vX.json venues_vX.json
 
-#-- Test file with correct json files
-#-- Error:Expecting 2 json files - one with 'Users' and another with 'Venues' in it
+#-- Error:Cannot find a proper json file for 'Users'
+python timeout.py users_vX.json venues_v0.json
+
+#-- Error:Cannot find a proper json file for 'Venues'
+python timeout.py users_v0.json venues_vX.json
+
+#-- Error:No such file : userss.json
+python timeout.py userss.json abc
+
+#-- We are sorry to note that we cannot find any venue which can satisfy your drinks/food list
+python timeout.py users_v0.json venues_none.json
+
+#-- proper json files provided, 2 veunes should be ok to eat 
 python timeout.py users_v0.json venues_v0.json
 
-#-- Test file with correct json files
-#-- Timeout people can go everywhere in this case, 
-#-- the Timeout Points if higher means youhave higher choice here 
-python timeout.py users_v1.json venues_v1.json
-
-#-- Test file with correct json files
-#-- Error:Expecting 2 json files - one with 'Users' and another with 'Venues' in it
-python timeout.py users_v0.json venues_v0.json
+#-- proper json files provided , 2 veunes should be ok to eat 
+#-- the order of the json files is switched , result should match above 
+python timeout.py venues_v0.json users_v0.json 
