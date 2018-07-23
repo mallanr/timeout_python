@@ -1,8 +1,8 @@
 
 
-1. Regression test doen in reg.sh 
-2. main python script is "timeout.py"
-3. I expect 2 inputs - one a json file for "Users" and another for "Venues"4. 
+1. Regression test is in reg.sh 
+2. The main python script is "timeout.py"
+3. I expect 2 inputs - one a json file for "Users" and another for "Venues". 
    
    Example
    >> python timeout.py users.json venues.json [ the order of the jsons is immaterial ]
