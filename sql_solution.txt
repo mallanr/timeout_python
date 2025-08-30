@@ -1,0 +1,55 @@
+with q_diner_foods as 
+    ( select 'Raj' as diner, 'Eggs' as wont_eat union 
+    select 'Raj' as diner, 'Meat' as wont_eat union 
+    select 'Pid' as diner, 'Meat' as wont_eat  union 
+    select 'Pid' as diner, 'Pasta' as wont_eat    
+    ), 
+q_diner_drinks as 
+    ( select 'Raj' as diner, 'Tea' as drinks union 
+    select 'Raj' as diner, '7up' as drinks union 
+    select 'Pid' as diner, 'Coffee' as drinks  union 
+    select 'Pid' as diner, '7up' as drinks    union 
+    select 'Pid' as diner, 'Mirinda' as drinks  union 
+    select 'Pid' as diner, 'Coke' as drinks   
+    ), 
+q_num_users as 
+   (select count(*) as num_diners 
+     from 
+        (
+        select distinct diner from q_diner_foods union 
+        select distinct diner from q_diner_drinks )
+   ),
+q_diner_venues as 
+    (select v.* , diner from 
+    venue_foods v cross join (select distinct diner from q_diner_foods)
+    ),
+q_num_foods as (
+select  f.venue_name, f.diner, count(*) as food_choices
+  from q_diner_venues f 
+  where f.food not in (select wont_eat from q_diner_foods u where u.diner = f.diner)
+  group by f.venue_name, f.diner ), 
+q_drinks_venues as 
+    (select v.* , diner from 
+    venue_drinks v cross join (select distinct diner from q_diner_drinks)
+    ), 
+q_num_drinks as (
+select  f.venue_name, f.diner, count(*) as drink_choices
+  from q_drinks_venues f 
+  where f.drink in (select drinks from q_diner_drinks u where u.diner = f.diner)
+  group by f.venue_name, f.diner ),
+q_is_venue_ok as (
+select coalesce(f.venue_name, d.venue_name) as venue_name, 
+       coalesce(f.diner, d.diner) as diner , 
+       coalesce(f.food_choices,0) as food_choices ,
+       coalesce(d.drink_choices,0) as drink_choices, 
+       case when coalesce(f.food_choices,0)  > 0 and coalesce(d.drink_choices,0) > 0 then 'Y' else 'N' end as is_venue_ok_for_this_user 
+from q_num_foods f full outer join q_num_drinks d
+on (f.venue_name = d.venue_name and f.diner = d.diner)),
+q_agg_ok_venues as 
+ (select f.venue_name , count(*) num_diners_ok
+    from q_is_venue_ok f
+    where is_venue_ok_for_this_user = 'Y'
+    group by f.venue_name 
+ )
+ select * from q_agg_ok_venues where num_diners_ok in (select num_diners from q_num_users)  
+  ;
